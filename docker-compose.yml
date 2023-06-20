@@ -1,0 +1,13 @@
+version: "3.8"
+
+services:
+  backend:
+    build: .
+    volumes:
+      - ./app:/code/app
+    environment:
+      - FLASK_HOST=0.0.0.0
+      - FLASK_ENV=development
+    ports:
+      - 5000:5000
+    #command: gunicorn --conf app/gunicorn_conf.py --bind 0.0.0.0:80 app.main:app
