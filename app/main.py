@@ -37,6 +37,14 @@ def get_certificates():
     return requests_response.content, 200, {"Content-Type": "text/json"}
 
 
+@app.route('/template', methods=['GET'])
+@cache.cached(timeout=3000)
+def get_template():
+    requests_response = requests.get(url='https://www.fmh.de/api/templates/certificate/3555')
+
+    return requests_response.content
+
+
 @app.route('/send_email', methods=['POST'])
 def send_email():
     data = request.get_json()
