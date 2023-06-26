@@ -15,7 +15,7 @@ cache.init_app(app)
 limiter = Limiter(
     get_remote_address,
     app=app,
-    default_limits=["10 per minute", "1 per second"],
+    default_limits=["100 per minute"],
     storage_uri="memory://",
     strategy="fixed-window",  # or "moving-window"
 )
@@ -46,6 +46,7 @@ def get_template():
 
 
 @app.route('/send_email', methods=['POST'])
+@limiter.limit("1/second")
 def send_email():
     data = request.get_json()
     firstname = data.get('firstname')
