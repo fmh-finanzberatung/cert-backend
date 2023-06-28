@@ -64,7 +64,7 @@ def send_email():
     phone = data.get('phone')
 
     # Perform basic validation
-    if not firstname or not lastname or not company or not email or not phone:
+    if not firstname or not lastname or not company or not email:
         return jsonify({'error': 'Missing required fields'}), 400
 
     try:
