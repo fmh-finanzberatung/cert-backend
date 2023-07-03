@@ -13,11 +13,14 @@ load_dotenv(find_dotenv())
 
 ALF_API_URL = "https://services1.fmh.de/webapi/banken-portal/graphql"
 ALF_API_TOKEN = "JlrIZRj87Ozg30leAlPxBHIaqtTphjyc"
+BE_API_URL = "https://cms.fmh.de/api/graphql"
 
 app = Flask(__name__)
 CORS(app)
 cache = Cache()
 cache.init_app(app)
+
+
 # limiter = Limiter(
 #     get_remote_address,
 #     app=app,
@@ -26,9 +29,51 @@ cache.init_app(app)
 #     strategy="fixed-window",  # or "moving-window"
 # )
 
+def make_graphql_request(url, query, variables=None, headers=None):
+    """
+    Makes a GraphQL request to the specified URL with the given query and optional variables and headers.
+    Returns the JSON response.
+    """
+    payload = {
+        'query': query,
+        'variables': variables or {}
+    }
+
+    response = requests.post(url, json=payload, headers=headers)
+    response.raise_for_status()  # Raise an exception if the request was unsuccessful
+
+    return response
+
+
+@app.route('/token', methods=['GET'])
+@cross_origin()
+def get_token():
+    query = '''mutation ($email: String!, $password: String!) {
+           authenticateUserWithPassword(
+             email: $email,
+             password: $password
+           ) {
+             ... on UserAuthenticationWithPasswordSuccess {
+               sessionToken
+             }
+             ... on UserAuthenticationWithPasswordFailure {
+               message
+             }
+           }
+         }
+    '''
+
+    variables = {
+        "email": "info@hgbeyer.com",
+        "password": "Mk9]6Fb0L2#e"
+    }
+
+    response = make_graphql_request(BE_API_URL, query, variables)
+    return response.json(), response.status_code, {"Content-Type": "text/json"}
+
 
 @app.route('/certificates', methods=['POST'])
-#@cache.cached(timeout=3000)
+# @cache.cached(timeout=3000)
 @cross_origin()
 def get_certificates():
     data = request.data
@@ -68,7 +113,8 @@ def send_email():
         return jsonify({'error': 'Missing required fields'}), 400
 
     try:
-        message = "Vorname: {}\nNachname: {}\nUnternehmen: {}\nEmail: {}\nTelefon: {}\n".format(firstname, lastname, company, email, phone)
+        message = "Vorname: {}\nNachname: {}\nUnternehmen: {}\nEmail: {}\nTelefon: {}\n".format(firstname, lastname,
+                                                                                                company, email, phone)
 
         # Create the email message
         email = EmailMessage()
