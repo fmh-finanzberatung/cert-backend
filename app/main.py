@@ -76,11 +76,11 @@ def get_token():
 # @cache.cached(timeout=3000)
 @cross_origin()
 def get_certificates():
-    data = request.data
+    token = request.data.get('token')
     requests_response = requests.post(
         url=ALF_API_URL,
         headers={
-            "ApiKey": ALF_API_TOKEN,
+            "ApiKey": token,
             "Content-Type": "application/graphql",
         },
         data=request.data,
@@ -120,7 +120,10 @@ def send_email():
         email = EmailMessage()
         email['Subject'] = "Anfrage Vermittler Zertifikat"
         email['From'] = os.environ.get("SMTP_FROM", 'web@hgbeyer.com')
-        email['To'] = os.environ.get("SMTP_TO", 'test@hgbeyer.com')
+        recipient_emails = os.environ.get("SMTP_TO", 'test@hgbeyer.com')
+        if recipient_emails:
+            recipient_emails = recipient_emails.split(',')
+        email['To'] = ', '.join(recipient_emails)
         email.set_content(message)
 
         # Connect to the SMTP server and send the email
